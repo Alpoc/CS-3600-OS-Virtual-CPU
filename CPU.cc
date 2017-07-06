@@ -239,7 +239,8 @@ PCB* choose_process ()
 */	
 		running -> interrupts + 1;
 		running -> state = READY;
-
+		PCB *nextProc;
+		//string pName = *nextProc -> name;
 		if (!new_list.empty()) 
 		{
 			PCB *nextProc = new_list.front();
@@ -248,10 +249,13 @@ PCB* choose_process ()
 
 		pid_t pid = fork();
 
-		if (pid > 0) 
+		if (pid == 0) 
 		{
-			execl( (*nextProc -> name), (*nextProc -> name), NULL);
+			execl( nextProc -> name, nextProc -> name, NULL);
 		}
+
+
+
 
 
 
