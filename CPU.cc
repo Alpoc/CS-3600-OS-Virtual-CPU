@@ -247,7 +247,7 @@ PCB* choose_process ()
 			//cout << (*it) -> name << "\n";
 			if ( (*it) -> state == READY) 
 			{
-				proccesses.push()
+				processes.push_front(*it);
 			}
 		}
 
@@ -303,7 +303,7 @@ void process_done (int signum)
 */
 void ISR (int signum)
 {
-	if ( signum != SIGCHILD) {
+	if ( signum != SIGCHLD) {
 
     if (kill (running->pid, SIGSTOP) == -1)
     {
