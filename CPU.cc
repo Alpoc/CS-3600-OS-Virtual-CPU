@@ -240,6 +240,21 @@ PCB* choose_process ()
 		running -> interrupts + 1;
 		running -> state = READY;
 
+		if (!new_list.empty()) 
+		{
+			PCB *nextProc = new_list.front();
+			new_list.pop_front();
+		}
+
+		pid_t pid = fork();
+
+		if (pid > 0) 
+		{
+			execl( (*nextProc -> name), (*nextProc -> name), NULL);
+		}
+
+
+
 
 		list<PCB*>::iterator it;
 		for ( it = new_list.begin(); it != new_list.end(); ++it)
