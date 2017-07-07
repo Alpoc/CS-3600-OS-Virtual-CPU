@@ -72,7 +72,7 @@ Add the following functionality.
     c) Start the idle process to use the rest of the time slice.
 */
 
-#define NUM_SECONDS 3
+#define NUM_SECONDS 20
 
 // make sure the asserts work
 #undef NDEBUG
@@ -213,6 +213,9 @@ struct sigaction *create_handler (int signum, void (*handler)(int))
 PCB* choose_process ()
 {
 /*
+enum STATE { 0 NEW, 1 RUNNING, 2 WAITING, 3 READY, TERMINATED };
+
+
 3) When a SIGALRM arrives, scheduler() will be called. It calls
     choose_process which currently always returns the idle process. Do the
     following.
@@ -239,38 +242,46 @@ PCB* choose_process ()
 */	
 		running -> interrupts + 1;
 		running -> state = READY;
+		processes.push_back(running);
 		PCB *nextProc;
-		//string pName = *nextProc -> name;
 		if (!new_list.empty()) 
 		{
+			cout << "list not empty hit \n";
 			PCB *nextProc = new_list.front();
 			new_list.pop_front();
+			//processes.push_back(nextProc);
+			nextProc->state = RUNNING;
+			cout << nextProc->pid << "\n";
+
+			pid_t pid = fork();
+			if ( pid == 0) 
+			{
+				nextProc->pid = pid;
+				execl( nextProc -> name, nextProc -> name, NULL);
+			}
+			running = nextProc;
+			
+			return nextProc;
 		}
-
-		pid_t pid = fork();
-
-		if (pid == 0) 
-		{
-			execl( nextProc -> name, nextProc -> name, NULL);
-		}
-
-
-
-
-
-
 
 		list<PCB*>::iterator it;
-		for ( it = new_list.begin(); it != new_list.end(); ++it)
-		{
-			//cout << (*it) -> name << "\n";
+		for ( it = processes.begin(); it != processes.end(); ++it)
+		{	
+			cout << "iterator looping \n";
+			cout << (*it) -> name << "\n";
+			cout << "State: " << (*it) -> state << "\n";
+			PCB *procList = (*it);
 			if ( (*it) -> state == READY) 
 			{
-				processes.push_front(*it);
+				cout << "Round robin \n";
+				//processes.push_front(running);
+				running = *it;
+				return *it;
+			}
+			else {
+				running = idle;
 			}
 		}
-
-
 		
 		
 
@@ -431,7 +442,7 @@ int main (int argc, char **argv)
 		create_process(argv[i]);
 	}
 	
-    //-------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
 
     int pid = getpid();
     dprintt ("main", pid);
