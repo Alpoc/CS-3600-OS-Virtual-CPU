@@ -241,45 +241,55 @@ enum STATE { 0 NEW, 1 RUNNING, 2 WAITING, 3 READY, TERMINATED };
 		new_list.push_front(proc);
 */	
 		running -> interrupts + 1;
-		running -> state = READY;
 		//processes.push_back(running);
 		PCB *nextProc;
 		if (!new_list.empty()) 
 		{
+			running -> state = READY;
 			cout << "list not empty hit \n";
 			PCB *nextProc = new_list.front();
-			new_list.pop_front();
+			
 			cout << nextProc->pid << "\n";
 
 			pid_t pid = fork();
 			if ( pid == 0) // in child process
 			{
-				execl( nextProc -> name, nextProc -> name, NULL);
+				execl( new_list.front() -> name, new_list.front() -> name, NULL);
 			}
 			else // in parent process
 			{
-				nextProc->ppid = getpid();
-				nextProc->state = RUNNING;
-				nextProc->switches++;
-				nextProc->started = sys_time;
-				nextProc->pid = pid;
+				new_list.front()->ppid = getpid();
+				new_list.front()->state = RUNNING;
+				new_list.front()->switches++;
+				new_list.front()->pid = pid;
 				
 			}
 			//running = nextProc;
+			new_list.pop_front();
 			processes.push_back(nextProc);
 			running = processes.back();
 			return nextProc;
 		}
 
+
 		list<PCB*>::iterator it; 
-		for ( it = processes.begin(); it != processes.end(); ++it)
+		for ( it = processes.begin(); it != processes.end(); it++)
 		{	
 			cout << "Process: "<< (*it)->name << " State: " << (*it) -> state << "\n";
+			if ( (*it)-> state == RUNNING)
+			{
+				processes.push_back(running);
+				processes.erase(it);
+				break;
+			}
+
+			running -> state = READY;
 			if ( (*it) -> state == READY) 
 			{
 				cout << "Round robin \n";
 				//processes.push_front(running);
 				//PCB *next = processes(it);
+				
 				(*it)->state = RUNNING;
 				running = *it;
 				return *it;
