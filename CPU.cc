@@ -293,6 +293,7 @@ enum STATE { 0 NEW, 1 RUNNING, 2 WAITING, 3 READY, TERMINATED };
 				(*it)->state = RUNNING;
 				running = *it;
 				return *it;
+				break;
 			}
 			else {
 				running = idle;
