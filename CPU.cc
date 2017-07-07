@@ -242,15 +242,19 @@ enum STATE { 0 NEW, 1 RUNNING, 2 WAITING, 3 READY, TERMINATED };
 		proc->started = sys_time;
 		new_list.push_front(proc);
 */	
-		running -> interrupts + 1;
+		running -> interrupts ++;
 		//processes.push_back(running);
 		PCB *nextProc;
 		if (!new_list.empty()) 
 		{
 			running -> state = READY;
 			PCB *nextProc = new_list.front();
-			
+			//running->switches++;
 			pid_t pid = fork();
+			if ( pid < 0 )
+			{ 
+				perror("fork failed"); 
+			}
 			if ( pid == 0) // in child process
 			{
 				execl( new_list.front() -> name, new_list.front() -> name, NULL);
@@ -259,7 +263,7 @@ enum STATE { 0 NEW, 1 RUNNING, 2 WAITING, 3 READY, TERMINATED };
 			{
 				new_list.front()->ppid = getpid();
 				new_list.front()->state = RUNNING;
-				new_list.front()->switches++;
+				//new_list.front()->switches++;
 				new_list.front()->pid = pid;
 				
 			}
@@ -273,12 +277,9 @@ enum STATE { 0 NEW, 1 RUNNING, 2 WAITING, 3 READY, TERMINATED };
 		// Ryan is thinking that we should have both if statements in their own iter so that 
 		// if a process gets set to ready randomly it doesnt cause conflicts. 
 		list<PCB*>::iterator it; 
-
-		
-
-
 		for ( it = processes.begin(); it != processes.end(); it++)
-		{	
+		{
+	
 			if ( (*it)-> state == RUNNING)
 			{
 				processes.push_back(running);
@@ -294,23 +295,23 @@ enum STATE { 0 NEW, 1 RUNNING, 2 WAITING, 3 READY, TERMINATED };
 		{		
 			if ( (*it) -> state == READY) 
 			{
-				//processes.push_front(running);
-				//PCB *next = processes(it);
-				
+				if ( (*it)->pid != running->pid)
+				{
+					(running)->switches++;
+				}
 				(*it)->state = RUNNING;
 				running = *it;
-				//return *it;
-				return running;
+				//return running;
 				break;
 			}
 			else {
 				running = idle;
-				return idle;
+				//return idle;
 
 			}
 		}
 		
-    return idle;
+    return running;
 }
 
 void scheduler (int signum)
