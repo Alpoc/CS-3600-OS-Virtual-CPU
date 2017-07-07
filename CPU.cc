@@ -210,6 +210,8 @@ struct sigaction *create_handler (int signum, void (*handler)(int))
     return (action);
 }
 
+
+// We all worked together: Ryan, Eli, Roach
 PCB* choose_process ()
 {
 /*
@@ -246,11 +248,8 @@ enum STATE { 0 NEW, 1 RUNNING, 2 WAITING, 3 READY, TERMINATED };
 		if (!new_list.empty()) 
 		{
 			running -> state = READY;
-			cout << "list not empty hit \n";
 			PCB *nextProc = new_list.front();
 			
-			cout << nextProc->pid << "\n";
-
 			pid_t pid = fork();
 			if ( pid == 0) // in child process
 			{
@@ -268,40 +267,49 @@ enum STATE { 0 NEW, 1 RUNNING, 2 WAITING, 3 READY, TERMINATED };
 			new_list.pop_front();
 			processes.push_back(nextProc);
 			running = processes.back();
-			return nextProc;
+			return running;
 		}
 
-
+		// Ryan is thinking that we should have both if statements in their own iter so that 
+		// if a process gets set to ready randomly it doesnt cause conflicts. 
 		list<PCB*>::iterator it; 
+
+		
+
+
 		for ( it = processes.begin(); it != processes.end(); it++)
 		{	
-			cout << "Process: "<< (*it)->name << " State: " << (*it) -> state << "\n";
 			if ( (*it)-> state == RUNNING)
 			{
 				processes.push_back(running);
+				processes.back()->state = READY;
 				processes.erase(it);
 				break;
 			}
+		}
 
-			running -> state = READY;
+			//running -> state = READY;
+
+		for ( it = processes.begin(); it != processes.end(); it++)
+		{		
 			if ( (*it) -> state == READY) 
 			{
-				cout << "Round robin \n";
 				//processes.push_front(running);
 				//PCB *next = processes(it);
 				
 				(*it)->state = RUNNING;
 				running = *it;
-				return *it;
+				//return *it;
+				return running;
 				break;
 			}
 			else {
 				running = idle;
+				return idle;
+
 			}
 		}
 		
-		
-
     return idle;
 }
 
@@ -322,6 +330,36 @@ void scheduler (int signum)
 
 void process_done (int signum)
 {
+/*
+4) When a SIGCHLD arrives notifying that a child has exited, process_done() is
+    called. process_done() currently only prints out the PID and the status.
+    a) Add the printing of the information in the PCB including the number
+        of times it was interrupted, the number of times it was context
+        switched (this may be fewer than the interrupts if a process
+        becomes the only non-idle process in the ready queue), and the total
+        system time the process took.
+    b) Change the state to TERMINATED.
+    c) Start the idle process to use the rest of the time slice.
+
+		PCB *proc = new (PCB);
+		proc->state = NEW;
+		proc->name = program;
+		proc->pid = procpid;
+		proc->ppid = 0;
+		proc->interrupts = 0;
+		proc->switches = 0;
+		proc->started = sys_time;
+		new_list.push_front(proc);
+*/
+	cout << "Process " << running->name << " was:\n";
+	cout << "interrupted " << running->interrupts << " times\n";
+	cout << "switched " << running->switches << " times\n";
+	cout << "and ran for " << sys_time - running->started << " seconds\n";
+	running->state = TERMINATED;
+	running = idle;
+
+
+
     assert (signum == SIGCHLD);
 
     int status, cpid;
@@ -441,12 +479,12 @@ void create_process(const char *program) {
 		PCB *proc = new (PCB);
 		proc->state = NEW;
 		proc->name = program;
-		proc->pid = procpid;
+		//proc->pid = procpid;
 		proc->ppid = 0;
 		proc->interrupts = 0;
 		proc->switches = 0;
 		proc->started = sys_time;
-		new_list.push_front(proc);
+		new_list.push_back(proc);
 		}
 }
 
