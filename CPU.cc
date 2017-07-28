@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+// 'chmod u+x count.sh' in the terminal to run the .sh file
 /*
 This program does the following.
 1) Create handlers for two signals.
@@ -70,6 +71,7 @@ Add the following functionality.
         system time the process took.
     b) Change the state to TERMINATED.
     c) Start the idle process to use the rest of the time slice.
+
 */
 
 #define NUM_SECONDS 20
@@ -211,7 +213,7 @@ struct sigaction *create_handler (int signum, void (*handler)(int))
 }
 
 
-// We all worked together: Ryan, Eli, Roach
+// We all worked together: Ryan, Eli
 PCB* choose_process ()
 {
 /*
@@ -230,52 +232,43 @@ enum STATE { 0 NEW, 1 RUNNING, 2 WAITING, 3 READY, TERMINATED };
     c) Modify choose_process to round robin the processes in the processes
         queue that are READY. If no process is READY in the queue, execute
         the idle process.
-*/
-/*
-		PCB *proc = new (PCB);
-		proc->state = NEW;
-		proc->name = program;
-		proc->pid = procpid;
-		proc->ppid = 0;
-		proc->interrupts = 0;
-		proc->switches = 0;
-		proc->started = sys_time;
-		new_list.push_front(proc);
 */	
+
+
 		running -> interrupts ++;
-		//processes.push_back(running);
-		PCB *nextProc;
 		if (!new_list.empty()) 
 		{
 			running -> state = READY;
 			PCB *nextProc = new_list.front();
-			//running->switches++;
 			pid_t pid = fork();
 			if ( pid < 0 )
 			{ 
 				perror("fork failed"); 
 			}
-			if ( pid == 0) // in child process
+			else if ( pid == 0) // in child process
 			{
+				// using nextProc here makes the output not as clean. Not sure why.
 				execl( new_list.front() -> name, new_list.front() -> name, NULL);
 			}
 			else // in parent process
 			{
-				new_list.front()->ppid = getpid();
-				new_list.front()->state = RUNNING;
-				//new_list.front()->switches++;
-				new_list.front()->pid = pid;
+				nextProc->ppid = getpid();
+				nextProc->state = RUNNING;
+				running->switches++;
+				nextProc->pid = pid;
+				nextProc->started = sys_time;
 				
 			}
-			//running = nextProc;
 			new_list.pop_front();
 			processes.push_back(nextProc);
 			running = processes.back();
 			return running;
 		}
 
-		// Ryan is thinking that we should have both if statements in their own iter so that 
-		// if a process gets set to ready randomly it doesnt cause conflicts. 
+//		Two for loops isnt completely needed here. I started with one mindset and though about switching it to one.
+//		The break also should save a tiny amount of time. 
+
+/*
 		list<PCB*>::iterator it; 
 		for ( it = processes.begin(); it != processes.end(); it++)
 		{
@@ -288,9 +281,6 @@ enum STATE { 0 NEW, 1 RUNNING, 2 WAITING, 3 READY, TERMINATED };
 				break;
 			}
 		}
-
-			//running -> state = READY;
-
 		for ( it = processes.begin(); it != processes.end(); it++)
 		{		
 			if ( (*it) -> state == READY) 
@@ -301,16 +291,13 @@ enum STATE { 0 NEW, 1 RUNNING, 2 WAITING, 3 READY, TERMINATED };
 				}
 				(*it)->state = RUNNING;
 				running = *it;
-				//return running;
 				break;
 			}
 			else {
 				running = idle;
-				//return idle;
-
 			}
 		}
-		
+*/	
     return running;
 }
 
@@ -341,16 +328,6 @@ void process_done (int signum)
         system time the process took.
     b) Change the state to TERMINATED.
     c) Start the idle process to use the rest of the time slice.
-
-		PCB *proc = new (PCB);
-		proc->state = NEW;
-		proc->name = program;
-		proc->pid = procpid;
-		proc->ppid = 0;
-		proc->interrupts = 0;
-		proc->switches = 0;
-		proc->started = sys_time;
-		new_list.push_front(proc);
 */
 	cout << "Process " << running->name << " was:\n";
 	cout << "interrupted " << running->interrupts << " times\n";
@@ -460,8 +437,20 @@ void create_idle ()
 }
 
 //Luke Smith helped me with this part, its a mirror of create_idle
+
+// I will probalby change this so that i dont fork and execl here since i do it later on. 
 void create_process(const char *program) {
-	
+
+		PCB *proc = new (PCB);
+		proc->state = NEW;
+		proc->name = program;
+		proc->ppid = 0;
+		proc->interrupts = 0;
+		proc->switches = 0;
+		proc->started = sys_time;
+		new_list.push_back(proc);	
+
+/*	
 	int procpid;
 
 	if ((procpid = fork()) >= 0){
@@ -487,6 +476,7 @@ void create_process(const char *program) {
 		proc->started = sys_time;
 		new_list.push_back(proc);
 		}
+*/
 }
 
 int main (int argc, char **argv)
