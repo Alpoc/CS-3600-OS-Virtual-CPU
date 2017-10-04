@@ -268,7 +268,7 @@ enum STATE { 0 NEW, 1 RUNNING, 2 WAITING, 3 READY, TERMINATED };
 //		Two for loops isnt completely needed here. I started with one mindset and though about switching it to one.
 //		The break also should save a tiny amount of time. 
 
-/*
+
 		list<PCB*>::iterator it; 
 		for ( it = processes.begin(); it != processes.end(); it++)
 		{
@@ -297,7 +297,7 @@ enum STATE { 0 NEW, 1 RUNNING, 2 WAITING, 3 READY, TERMINATED };
 				running = idle;
 			}
 		}
-*/	
+	
     return running;
 }
 
